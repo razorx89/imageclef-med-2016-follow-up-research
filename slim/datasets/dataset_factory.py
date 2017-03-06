@@ -20,6 +20,7 @@ from __future__ import print_function
 
 from datasets import cifar10
 from datasets import flowers
+from datasets import imageclef_med_2016
 from datasets import imagenet
 from datasets import mnist
 
@@ -27,6 +28,7 @@ datasets_map = {
     'cifar10': cifar10,
     'flowers': flowers,
     'imagenet': imagenet,
+    'ImageCLEFmed2016': imageclef_med_2016,
     'mnist': mnist,
 }
 
