@@ -40,6 +40,12 @@ import csv
 
 from datasets import dataset_utils
 
+tf.app.flags.DEFINE_boolean('imageclef_med_2016_ara', False, 'Use aspect-aware image resizing')
+
+tf.app.flags.DEFINE_boolean('imageclef_med_2016_auto_crop', False, 'Use auto-cropping to remove homogenous regions')
+
+FLAGS = tf.app.flags.FLAGS
+
 _TRAIN_PATHS = [
     '/home/koitka/ImageCLEF/2013/ImageCLEF2013TrainingSet',
     '/home/koitka/ImageCLEF/2013/ImageCLEF2013TestSetGROUNDTRUTH',
@@ -158,7 +164,7 @@ def _convert_dataset(split_name, filenames, class_names_to_ids, dataset_dir, met
                         # Read the filename:
                         # image_data = tf.gfile.FastGFile(filenames[i], 'r').read()
                         image = cv2.imread(filenames[i], cv2.IMREAD_COLOR)
-                        image, meta_info = _preprocess_image(image, squash=False)
+                        image, meta_info = _preprocess_image(image, squash=not FLAGS.imageclef_med_2016_ara)
                         meta_info['dataset'] = os.path.basename(os.path.dirname(os.path.dirname(filenames[i])))
 
                         if csv_writer is None:
@@ -188,17 +194,24 @@ def _convert_dataset(split_name, filenames, class_names_to_ids, dataset_dir, met
     sys.stdout.flush()
 
 
-def _preprocess_image(image, squash=True, no_upscaling=True):
+def _preprocess_image(image, squash=True, no_upscaling=False):
     if squash:
         meta_info = {
             'height': image.shape[0],
             'width': image.shape[1]
         }
+
+        if FLAGS.imageclef_med_2016_auto_crop:
+            image, _ = _auto_crop(image)
+
         result = cv2.resize(image, (_IMAGE_SIZE, _IMAGE_SIZE), interpolation=cv2.INTER_CUBIC)
     else:
         # Remove homogeneous areas at borders
         shape_before_crop = image.shape
-        image, dominant_color = _auto_crop(image)
+        if FLAGS.imageclef_med_2016_auto_crop:
+            image, dominant_color = _auto_crop(image)
+        else:
+            dominant_color = (255, 255, 255)
         shape_after_crop = image.shape
 
         # Resize image while keeping the aspect ratio fixed

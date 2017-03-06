@@ -99,5 +99,7 @@ ENV/
 # Dolphin
 .directory
 
-# Pretrained models
+# Created directories to ignore
+datasets/
+models/
 pretrained/
