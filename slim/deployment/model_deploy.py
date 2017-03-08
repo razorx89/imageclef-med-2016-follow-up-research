@@ -232,9 +232,11 @@ def _gather_clone_loss(clone, num_clones, regularization_losses):
       sum_loss = tf.add_n(all_losses)
   # Add the summaries out of the clone device block.
   if clone_loss is not None:
-    tf.summary.scalar(clone.scope + '/clone_loss', clone_loss)
+    tf.scalar_summary(clone.scope + '/clone_loss', clone_loss,
+                      name='clone_loss')
   if regularization_loss is not None:
-    tf.summary.scalar('regularization_loss', regularization_loss)
+    tf.scalar_summary('regularization_loss', regularization_loss,
+                      name='regularization_loss')
   return sum_loss
 
 
@@ -402,11 +404,12 @@ def deploy(config,
 
     if total_loss is not None:
       # Add total_loss to summary.
-      summaries.add(tf.summary.scalar('total_loss', total_loss))
+      summaries.add(tf.scalar_summary('total_loss', total_loss,
+                                      name='total_loss'))
 
     if summaries:
       # Merge all summaries together.
-      summary_op = tf.summary.merge(list(summaries), name='summary_op')
+      summary_op = tf.merge_summary(list(summaries), name='summary_op')
     else:
       summary_op = None
 
@@ -464,9 +467,9 @@ def _add_gradients_summaries(grads_and_vars):
         grad_values = grad.values
       else:
         grad_values = grad
-      summaries.append(tf.summary.histogram(var.op.name + ':gradient',
+      summaries.append(tf.histogram_summary(var.op.name + ':gradient',
                                             grad_values))
-      summaries.append(tf.summary.histogram(var.op.name + ':gradient_norm',
+      summaries.append(tf.histogram_summary(var.op.name + ':gradient_norm',
                                             tf.global_norm([grad_values])))
     else:
       tf.logging.info('Var %s has no gradient', var.op.name)

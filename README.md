@@ -1,3 +1,3 @@
 
 Tensorflow Models/slim Snapshot
-https://github.com/tensorflow/models/commit/3be9ece9574d7bac07704e43705741d9af1de1e6
+https://github.com/tensorflow/models/tree/a315e5681d9cfee90f3adba460fd63b29ad886f9

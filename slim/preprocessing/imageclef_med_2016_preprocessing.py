@@ -125,12 +125,12 @@ def preprocess_for_train(image, height, width,
         if image.dtype != tf.float32:
             image = tf.image.convert_image_dtype(image, dtype=tf.float32)
 
-        tf.summary.image('original_image', tf.expand_dims(image, 0))
+        tf.image_summary('original_image', tf.expand_dims(image, 0))
 
         image = tf.image.resize_image_with_crop_or_pad(image, 360, 360)
         cropped_image = tf.random_crop(image, [height, width, 3])
 
-        tf.summary.image('cropped_image', tf.expand_dims(cropped_image, 0))
+        tf.image_summary('cropped_image', tf.expand_dims(cropped_image, 0))
 
         # Randomly flip the image horizontally.
         distorted_image = tf.image.random_flip_left_right(cropped_image)
@@ -141,10 +141,10 @@ def preprocess_for_train(image, height, width,
             lambda x, ordering: distort_color(x, ordering, fast_mode),
             num_cases=4)
 
-        tf.summary.image('final_distorted_image',
+        tf.image_summary('final_distorted_image',
                          tf.expand_dims(distorted_image, 0))
-        distorted_image = tf.subtract(distorted_image, 0.5)
-        distorted_image = tf.multiply(distorted_image, 2.0)
+        distorted_image = tf.sub(distorted_image, 0.5)
+        distorted_image = tf.mul(distorted_image, 2.0)
 
         return distorted_image
 
@@ -177,8 +177,8 @@ def preprocess_for_eval(image, height, width,
 
         image = tf.image.resize_image_with_crop_or_pad(image, height, width)
 
-        image = tf.subtract(image, 0.5)
-        image = tf.multiply(image, 2.0)
+        image = tf.sub(image, 0.5)
+        image = tf.mul(image, 2.0)
         return image
 
 
