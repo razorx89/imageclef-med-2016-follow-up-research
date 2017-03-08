@@ -25,6 +25,7 @@ do
         --dataset_dir=${DATASET_DIR} \
         --dataset_name=ImageCLEFmed2016 \
         --dataset_split_name=train \
+        --preprocessing_name=ImageCLEFmed2016 \
         --model_name=inception_resnet_v2 \
         --batch_size=${BATCH_SIZE} \
         --num_clones=${NUM_CLONES} \
@@ -44,6 +45,7 @@ do
         --dataset_dir=${DATASET_DIR} \
         --dataset_name=ImageCLEFmed2016 \
         --dataset_split_name=validation \
+        --preprocessing_name=ImageCLEFmed2016 \
         --model_name=inception_resnet_v2
 
     # Fine-tune all layers for 10 epochs
@@ -52,6 +54,7 @@ do
         --dataset_dir=${DATASET_DIR} \
         --dataset_name=ImageCLEFmed2016 \
         --dataset_split_name=train \
+        --preprocessing_name=ImageCLEFmed2016 \
         --model_name=inception_resnet_v2 \
         --batch_size=${BATCH_SIZE} \
         --num_clones=${NUM_CLONES} \
@@ -71,5 +74,6 @@ do
         --dataset_dir=${DATASET_DIR} \
         --dataset_name=ImageCLEFmed2016 \
         --dataset_split_name=validation \
+        --preprocessing_name=ImageCLEFmed2016 \
         --model_name=inception_resnet_v2
 done
