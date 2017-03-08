@@ -48,6 +48,7 @@ do
             --learning_rate_decay_type=fixed \
             --weight_decay=0.0001 \
             --save_summaries_secs=30 \
+            --save_interval_secs=1800 \
             --checkpoint_path=${PRETRAINED_MODEL_FILE} \
             --checkpoint_exclude_scopes=${MODEL_ARG_SCOPE}/Logits,${MODEL_ARG_SCOPE}/AuxLogits \
             --trainable_scopes=${MODEL_ARG_SCOPE}/Logits,${MODEL_ARG_SCOPE}/AuxLogits \
@@ -81,6 +82,7 @@ do
             --decay_steps=2500 \
             --weight_decay=0.0001 \
             --save_summaries_secs=30 \
+            --save_interval_secs=1800 \
             --checkpoint_path=${TRAIN_DIR} \
         2>&1 | tee -a ${LOG_FILE}
 
