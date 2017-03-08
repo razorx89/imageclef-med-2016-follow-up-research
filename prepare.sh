@@ -23,3 +23,9 @@ python slim/download_and_convert_data.py \
     --imageclef_med_2016_ara \
     --imageclef_med_2016_auto_crop
 
+python slim/download_and_convert_data.py \
+    --dataset_name=ImageCLEFmed2016 \
+    --dataset_dir=datasets/ImageCLEFmed2016-ara-autocrop-noupscale/ \
+    --imageclef_med_2016_ara \
+    --imageclef_med_2016_auto_crop \
+    --imageclef_med_2016_no_upscaling

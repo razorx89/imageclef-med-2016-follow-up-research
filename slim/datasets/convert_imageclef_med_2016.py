@@ -44,6 +44,8 @@ tf.app.flags.DEFINE_boolean('imageclef_med_2016_ara', False, 'Use aspect-aware i
 
 tf.app.flags.DEFINE_boolean('imageclef_med_2016_auto_crop', False, 'Use auto-cropping to remove homogenous regions')
 
+tf.app.flags.DEFINE_boolean('imageclef_med_2016_no_upscaling', False, 'Do not upscale images if their image size is smaller than the target size')
+
 FLAGS = tf.app.flags.FLAGS
 
 _TRAIN_PATHS = [
@@ -164,7 +166,9 @@ def _convert_dataset(split_name, filenames, class_names_to_ids, dataset_dir, met
                         # Read the filename:
                         # image_data = tf.gfile.FastGFile(filenames[i], 'r').read()
                         image = cv2.imread(filenames[i], cv2.IMREAD_COLOR)
-                        image, meta_info = _preprocess_image(image, squash=not FLAGS.imageclef_med_2016_ara)
+                        image, meta_info = _preprocess_image(image,
+                                                             squash=not FLAGS.imageclef_med_2016_ara,
+                                                             no_upscaling=FLAGS.imageclef_med_2016_no_upscaling)
                         meta_info['dataset'] = os.path.basename(os.path.dirname(os.path.dirname(filenames[i])))
 
                         if csv_writer is None:
@@ -313,6 +317,10 @@ def run(dataset_dir):
     if _dataset_exists(dataset_dir):
         print('Dataset files already exist. Exiting without re-creating them.')
         return
+
+    print('Use ARA:          %s' % str(FLAGS.imageclef_med_2016_ara))
+    print('Use Auto-crop:    %s' % str(FLAGS.imageclef_med_2016_auto_crop))
+    print('Use No-Upscaling: %s' % str(FLAGS.imageclef_med_2016_no_upscaling))
 
     training_filenames, class_names = _get_filenames_and_classes(_TRAIN_PATHS)
     class_names_to_ids = dict(zip(class_names, range(len(class_names))))
