@@ -103,7 +103,7 @@ do
         >> ${TRAIN_DIR_BASE}/results.txt
 
         # Create empty file to flag this run as done
-        touch DONE
+        touch ${TRAIN_DIR}/DONE
 
     done
 done
