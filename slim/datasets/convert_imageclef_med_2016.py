@@ -283,14 +283,13 @@ def _compute_ara_image_shape(shape, new_dim, no_upscaling=False):
         # Portrait
         new_height = min(shape[0], new_dim) if no_upscaling else new_dim
         new_width = int(new_height / aspect_ratio)
-        pad_top = 0
-        pad_left = (new_dim - new_width) / 2
     else:
         # Landscape
         new_width = min(shape[1], new_dim) if no_upscaling else new_dim
         new_height = int(aspect_ratio * new_width)
-        pad_left = 0
-        pad_top = (new_dim - new_height) / 2
+        
+    pad_top = (new_dim - new_height) / 2
+    pad_left = (new_dim - new_width) / 2
 
     return (new_width, new_height, shape[2]), (int(pad_left), int(pad_top))
 
