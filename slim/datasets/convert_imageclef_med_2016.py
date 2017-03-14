@@ -287,7 +287,7 @@ def _compute_ara_image_shape(shape, new_dim, no_upscaling=False):
         # Landscape
         new_width = min(shape[1], new_dim) if no_upscaling else new_dim
         new_height = int(aspect_ratio * new_width)
-        
+
     pad_top = (new_dim - new_height) / 2
     pad_left = (new_dim - new_width) / 2
 
@@ -304,6 +304,13 @@ def _dataset_exists(dataset_dir):
     return True
 
 
+def _write_name_index(dataset_dir, split_name, filenames):
+    with open(os.path.join(dataset_dir, '%s_names.txt' % split_name), 'w') as ofile:
+        for filename in filenames:
+            ofile.write(os.path.splitext(os.path.basename(filename))[0])
+            ofile.write('\n')
+
+
 def run(dataset_dir):
     """Runs the download and conversion operation.
 
@@ -314,8 +321,8 @@ def run(dataset_dir):
         tf.gfile.MakeDirs(dataset_dir)
 
     if _dataset_exists(dataset_dir):
-        print('Dataset files already exist. Exiting without re-creating them.')
-        return
+       print('Dataset files already exist. Exiting without re-creating them.')
+       return
 
     print('Use ARA:          %s' % str(FLAGS.imageclef_med_2016_ara))
     print('Use Auto-crop:    %s' % str(FLAGS.imageclef_med_2016_auto_crop))
@@ -328,6 +335,10 @@ def run(dataset_dir):
     random.seed(_RANDOM_SEED)
     random.shuffle(training_filenames)
     random.shuffle(validation_filenames)
+
+    # Write name index
+    _write_name_index(dataset_dir, 'train', training_filenames)
+    _write_name_index(dataset_dir, 'validation', validation_filenames)
 
     # First, convert the training and validation sets.
     with open(os.path.join(dataset_dir, 'meta.csv'), 'wb') as meta_file:
