@@ -1,0 +1,131 @@
+import numpy as np
+
+import tensorflow as tf
+slim = tf.contrib.slim
+from tensorflow.python.platform import tf_logging as logging
+from datasets import dataset_factory
+from nets import nets_factory
+from preprocessing import preprocessing_factory
+
+
+tf.app.flags.DEFINE_string('checkpoint_path', None, 'Path to either a checkpoint dir or checkpoint file')
+tf.app.flags.DEFINE_string('dataset_name', None, 'Name of the dataset to evaluate')
+tf.app.flags.DEFINE_string('dataset_dir', None, 'Path to the dataset to evaluate')
+tf.app.flags.DEFINE_string('model_name', None, 'Name of the model architecture')
+tf.app.flags.DEFINE_string('preprocessing_name', None, 'Name of the preprocessing function')
+tf.app.flags.DEFINE_integer('eval_image_size', None, 'Size of the images')
+tf.app.flags.DEFINE_boolean('oversampling', False, 'Use 10 crops to evaluate one image')
+FLAGS = tf.app.flags.FLAGS
+
+
+def main(_):
+    tf.logging.set_verbosity(tf.logging.INFO)
+    with tf.Graph().as_default():
+        ####################################
+        # Select dataset and create reader #
+        ####################################
+        dataset = dataset_factory.get_dataset(name=FLAGS.dataset_name,
+                                              split_name='validation',
+                                              dataset_dir=FLAGS.dataset_dir)
+
+        provider = slim.dataset_data_provider.DatasetDataProvider(dataset,
+                                                                  shuffle=False,
+                                                                  num_readers=1,
+                                                                  common_queue_capacity=2,
+                                                                  common_queue_min=1)
+        [image, label] = provider.get(['image', 'label'])
+
+        num_images = provider.num_samples()
+        logging.info('Number of images in validation set: %d', num_images)
+
+        ########################
+        # Create model network #
+        ########################
+        network_fn = nets_factory.get_network_fn(name=FLAGS.model_name,
+                                                 num_classes=dataset.num_classes,
+                                                 is_training=False)
+
+        #################################
+        # Select preprocessing function #
+        #################################
+        preprocess_fn = preprocessing_factory.get_preprocessing(name=FLAGS.preprocessing_name,
+                                                                is_training=False)
+
+        eval_image_size = FLAGS.eval_image_size or network_fn.default_image_size
+        network_input_size = network_fn.default_image_size
+
+        #############################
+        # Take crops and preprocess #
+        #############################
+        if FLAGS.oversampling:
+            pad = eval_image_size - network_input_size
+            half_pad = int(pad / 2)
+            flipped = tf.image.flip_left_right(image)
+            crops = [
+                tf.image.crop_to_bounding_box(image, 0, 0, network_input_size, network_input_size),
+                tf.image.crop_to_bounding_box(image, pad, 0, network_input_size, network_input_size),
+                tf.image.crop_to_bounding_box(image, 0, pad, network_input_size, network_input_size),
+                tf.image.crop_to_bounding_box(image, pad, pad, network_input_size, network_input_size),
+                tf.image.crop_to_bounding_box(image, pad / 2, pad / 2, network_input_size, network_input_size),
+                tf.image.crop_to_bounding_box(flipped, 0, 0, network_input_size, network_input_size),
+                tf.image.crop_to_bounding_box(flipped, pad, 0, network_input_size, network_input_size),
+                tf.image.crop_to_bounding_box(flipped, 0, pad, network_input_size, network_input_size),
+                tf.image.crop_to_bounding_box(flipped, pad, pad, network_input_size, network_input_size),
+                tf.image.crop_to_bounding_box(flipped, half_pad, half_pad, network_input_size, network_input_size),
+            ]
+
+            crops = tf.pack([preprocess_fn(x, network_input_size, network_input_size) for x in crops], axis=0)
+            images = tf.reshape(crops, [10, network_input_size, network_input_size, 3])
+        else:
+            crops = tf.expand_dims(preprocess_fn(image, network_input_size, network_input_size), 0)
+            images = tf.reshape(crops, [1, network_input_size, network_input_size, 3])
+
+        batch_queue = slim.prefetch_queue.prefetch_queue([images, label], capacity=4)
+        images, label = batch_queue.dequeue()
+
+        #####################
+        # Instantiate model #
+        #####################
+        logits, _ = network_fn(images)
+        probabilities = tf.nn.softmax(logits)
+
+        ####################
+        # Create a session #
+        ####################
+        with tf.Session() as sess:
+            ######################
+            # Restore checkpoint #
+            ######################
+            if tf.gfile.IsDirectory(FLAGS.checkpoint_path):
+                checkpoint_path = tf.train.latest_checkpoint(FLAGS.checkpoint_path)
+            else:
+                checkpoint_path = FLAGS.checkpoint_path
+
+            tf.logging.info('Fine-tuning from %s' % checkpoint_path)
+            variables_to_restore = slim.get_variables_to_restore()
+            saver = tf.train.Saver(variables_to_restore)
+            saver.restore(sess, checkpoint_path)
+
+            ############################
+            # Start asynchronous tasks #
+            ############################
+            coord = tf.train.Coordinator()
+            tf.train.start_queue_runners(coord=coord)
+
+            #
+            print('Evaluating graph...')
+            num_correct = 0
+            for i in range(num_images):
+                prediction, gt_class = sess.run([probabilities, label])
+                predicted_class = np.argmax(np.mean(prediction, axis=0))
+                if predicted_class == gt_class:
+                    num_correct += 1
+
+                if (i + 1) % 100 == 0:
+                    print('%d/%d' % (i+1, num_images))
+
+            print(num_correct / float(num_images))
+
+
+if __name__ == '__main__':
+    tf.app.run()
