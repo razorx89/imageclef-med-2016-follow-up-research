@@ -3,6 +3,7 @@
 # Download pretrained models
 mkdir -p pretrained
 wget -qO- http://download.tensorflow.org/models/inception_resnet_v2_2016_08_30.tar.gz | tar vxz -C ./pretrained
+wget -qO- http://download.tensorflow.org/models/inception_v4_2016_09_09.tar.gz | tar vxz -C ./pretrained
 
 # Create datasets
 mkdir -p datasets
