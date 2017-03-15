@@ -1,9 +1,10 @@
 import numpy as np
+import os
 
 import tensorflow as tf
 slim = tf.contrib.slim
 from tensorflow.python.platform import tf_logging as logging
-from datasets import dataset_factory
+from datasets import dataset_factory, dataset_utils
 from nets import nets_factory
 from preprocessing import preprocessing_factory
 
@@ -15,6 +16,8 @@ tf.app.flags.DEFINE_string('model_name', None, 'Name of the model architecture')
 tf.app.flags.DEFINE_string('preprocessing_name', None, 'Name of the preprocessing function')
 tf.app.flags.DEFINE_integer('eval_image_size', None, 'Size of the images')
 tf.app.flags.DEFINE_boolean('oversampling', False, 'Use 10 crops to evaluate one image')
+tf.app.flags.DEFINE_string('output_dir', '.', 'Output directory of result files')
+tf.app.flags.DEFINE_string('output_prefix', None, 'Prefix for each result file name')
 FLAGS = tf.app.flags.FLAGS
 
 
@@ -37,6 +40,23 @@ def main(_):
 
         num_images = provider.num_samples()
         logging.info('Number of images in validation set: %d', num_images)
+
+        ####################
+        # Load image names #
+        ####################
+        if os.path.exists(os.path.join(FLAGS.dataset_dir, 'validation_names.txt')):
+            with open(os.path.join(FLAGS.dataset_dir, 'validation_names.txt')) as ifile:
+                image_names = [x.strip() for x in ifile]
+        else:
+            image_names = None
+
+        ###############
+        # Load labels #
+        ###############
+        if dataset_utils.has_labels(FLAGS.dataset_dir):
+            labels = dataset_utils.read_label_file(FLAGS.dataset_dir)
+        else:
+            labels = None
 
         ########################
         # Create model network #
@@ -101,7 +121,7 @@ def main(_):
             else:
                 checkpoint_path = FLAGS.checkpoint_path
 
-            tf.logging.info('Fine-tuning from %s' % checkpoint_path)
+            tf.logging.info('Evaluating from %s' % checkpoint_path)
             variables_to_restore = slim.get_variables_to_restore()
             saver = tf.train.Saver(variables_to_restore)
             saver.restore(sess, checkpoint_path)
@@ -112,20 +132,62 @@ def main(_):
             coord = tf.train.Coordinator()
             tf.train.start_queue_runners(coord=coord)
 
-            #
-            print('Evaluating graph...')
-            num_correct = 0
-            for i in range(num_images):
-                prediction, gt_class = sess.run([probabilities, label])
-                predicted_class = np.argmax(np.mean(prediction, axis=0))
-                if predicted_class == gt_class:
-                    num_correct += 1
+            #######################
+            # Evaluate all images #
+            #######################
+            output_suffix = '_oversampled' if FLAGS.oversampling else ''
+            output_prefix = '_' + FLAGS.output_prefix if FLAGS.output_prefix else ''
 
-                if (i + 1) % 100 == 0:
-                    print('%d/%d' % (i+1, num_images))
+            prob_path = os.path.join(FLAGS.output_dir, output_prefix + 'probabilities' + output_suffix + '.csv')
+            pred_path = os.path.join(FLAGS.output_dir, output_prefix + 'predictions' + output_suffix + '.csv')
 
-            print(num_correct / float(num_images))
+            with open(prob_path, 'w') as ofile_prob, \
+                    open(pred_path, 'w') as ofile_pred:
+                # Write header lines to files
+                ofile_pred.write('name,label\n')
+                ofile_prob.write('name,%s\n' % ','.join([labels[x] for x in sorted(labels.keys())]))
 
+                num_correct = 0
+                for i in range(num_images):
+                    # Execute one step
+                    prediction, gt_class = sess.run([probabilities, label])
+
+                    # Compute statistics
+                    prediction = np.mean(prediction, axis=0)
+                    predicted_class = np.argmax(prediction)
+                    if predicted_class == gt_class:
+                        num_correct += 1
+
+                    # Get name of image
+                    if image_names:
+                        name = image_names[i]
+                    else:
+                        name = '#%d' % i
+
+                    # Get label of image
+                    if labels:
+                        predicted_label = labels[predicted_class]
+                    else:
+                        predicted_label = '%d' % predicted_class
+
+                    # Write to output files
+                    ofile_pred.write('%s,%s\n' % (name, predicted_label ))
+                    ofile_prob.write('%s,%s\n' % (name, ','.join(['%f' % x for x in prediction])))
+
+                    # Output status info
+                    if (i + 1) % 100 == 0:
+                        logging.info('%d/%d images processed' % (i+1, num_images))
+
+            if (i + 1) % 100 != 0:
+                logging.info('%d/%d images processed' % (num_images, num_images))
+
+            logging.info('Accuracy: %f', num_correct / float(num_images))
+
+            ###########################
+            # Stop asynchronous tasks #
+            ###########################
+            coord.request_stop()
+            coord.join(stop_grace_period_secs=5)
 
 if __name__ == '__main__':
     tf.app.run()
