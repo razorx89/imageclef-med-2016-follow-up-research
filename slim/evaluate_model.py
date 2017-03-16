@@ -136,7 +136,7 @@ def main(_):
             # Evaluate all images #
             #######################
             output_suffix = '_oversampled' if FLAGS.oversampling else ''
-            output_prefix = '_' + FLAGS.output_prefix if FLAGS.output_prefix else ''
+            output_prefix = FLAGS.output_prefix + '_' if FLAGS.output_prefix else ''
 
             prob_path = os.path.join(FLAGS.output_dir, output_prefix + 'probabilities' + output_suffix + '.csv')
             pred_path = os.path.join(FLAGS.output_dir, output_prefix + 'predictions' + output_suffix + '.csv')
