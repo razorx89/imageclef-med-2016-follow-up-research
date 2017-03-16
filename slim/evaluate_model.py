@@ -36,19 +36,10 @@ def main(_):
                                                                   num_readers=1,
                                                                   common_queue_capacity=2,
                                                                   common_queue_min=1)
-        [image, label] = provider.get(['image', 'label'])
+        [image, label, name] = provider.get(['image', 'label', 'name'])
 
         num_images = provider.num_samples()
         logging.info('Number of images in validation set: %d', num_images)
-
-        ####################
-        # Load image names #
-        ####################
-        if os.path.exists(os.path.join(FLAGS.dataset_dir, 'validation_names.txt')):
-            with open(os.path.join(FLAGS.dataset_dir, 'validation_names.txt')) as ifile:
-                image_names = [x.strip() for x in ifile]
-        else:
-            image_names = None
 
         ###############
         # Load labels #
@@ -100,8 +91,8 @@ def main(_):
             crops = tf.expand_dims(preprocess_fn(image, network_input_size, network_input_size), 0)
             images = tf.reshape(crops, [1, network_input_size, network_input_size, 3])
 
-        batch_queue = slim.prefetch_queue.prefetch_queue([images, label], capacity=4)
-        images, label = batch_queue.dequeue()
+        batch_queue = slim.prefetch_queue.prefetch_queue([images, label, name], capacity=4)
+        images, label, name = batch_queue.dequeue()
 
         #####################
         # Instantiate model #
@@ -150,19 +141,13 @@ def main(_):
                 num_correct = 0
                 for i in range(num_images):
                     # Execute one step
-                    prediction, gt_class = sess.run([probabilities, label])
+                    prediction, gt_class, image_name = sess.run([probabilities, label, name])
 
                     # Compute statistics
                     prediction = np.mean(prediction, axis=0)
                     predicted_class = np.argmax(prediction)
                     if predicted_class == gt_class:
                         num_correct += 1
-
-                    # Get name of image
-                    if image_names:
-                        name = image_names[i]
-                    else:
-                        name = '#%d' % i
 
                     # Get label of image
                     if labels:
@@ -171,8 +156,8 @@ def main(_):
                         predicted_label = '%d' % predicted_class
 
                     # Write to output files
-                    ofile_pred.write('%s,%s\n' % (name, predicted_label ))
-                    ofile_prob.write('%s,%s\n' % (name, ','.join(['%f' % x for x in prediction])))
+                    ofile_pred.write('%s,%s\n' % (image_name, predicted_label ))
+                    ofile_prob.write('%s,%s\n' % (image_name, ','.join(['%f' % x for x in prediction])))
 
                     # Output status info
                     if (i + 1) % 100 == 0:
