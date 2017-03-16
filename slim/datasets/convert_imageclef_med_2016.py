@@ -68,7 +68,7 @@ _NUM_SHARDS = 5
 _IMAGE_SIZE = 360
 
 # Generates a debug directory with images in the dataset directory
-_GENERATE_DEBUG_IMAGES = True
+_GENERATE_DEBUG_IMAGES = False
 
 class ImageReader(object):
     """Helper class that provides TensorFlow image coding utilities."""
@@ -191,7 +191,17 @@ def _convert_dataset(split_name, filenames, class_names_to_ids, dataset_dir, met
 
                         # example = dataset_utils.image_to_tfexample(image_data, 'jpg', height, width, class_id)
                         _, image = cv2.imencode('.png', image, [cv2.IMWRITE_PNG_COMPRESSION, 6])
+
+                        image_name = os.path.splitext(os.path.basename(filenames[i]))[0]
                         example = dataset_utils.image_to_tfexample(image.tostring(), 'png', height, width, class_id)
+                        example = tf.train.Example(features=tf.train.Features(feature={
+                            'image/encoded': dataset_utils.bytes_feature(image.tostring()),
+                            'image/format': dataset_utils.bytes_feature('png'),
+                            'image/class/label': dataset_utils.int64_feature(class_id),
+                            'image/height': dataset_utils.int64_feature(height),
+                            'image/width': dataset_utils.int64_feature(width),
+                            'image/name': dataset_utils.bytes_feature(image_name),
+                        }))
                         tfrecord_writer.write(example.SerializeToString())
 
     sys.stdout.write('\n')
@@ -304,13 +314,6 @@ def _dataset_exists(dataset_dir):
     return True
 
 
-def _write_name_index(dataset_dir, split_name, filenames):
-    with open(os.path.join(dataset_dir, '%s_names.txt' % split_name), 'w') as ofile:
-        for filename in filenames:
-            ofile.write(os.path.splitext(os.path.basename(filename))[0])
-            ofile.write('\n')
-
-
 def run(dataset_dir):
     """Runs the download and conversion operation.
 
@@ -335,10 +338,6 @@ def run(dataset_dir):
     random.seed(_RANDOM_SEED)
     random.shuffle(training_filenames)
     random.shuffle(validation_filenames)
-
-    # Write name index
-    _write_name_index(dataset_dir, 'train', training_filenames)
-    _write_name_index(dataset_dir, 'validation', validation_filenames)
 
     # First, convert the training and validation sets.
     with open(os.path.join(dataset_dir, 'meta.csv'), 'wb') as meta_file:
