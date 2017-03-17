@@ -158,6 +158,7 @@ def main(_):
             prob_path = os.path.join(FLAGS.output_dir, output_prefix + 'probabilities' + output_suffix + '.csv')
             pred_path = os.path.join(FLAGS.output_dir, output_prefix + 'predictions' + output_suffix + '.csv')
 
+            written_names = set()
             timings = collections.deque(maxlen=10)
             with open(prob_path, 'w') as ofile_prob, \
                     open(pred_path, 'w') as ofile_pred:
@@ -182,6 +183,11 @@ def main(_):
                         predicted_class = np.argmax(prediction, axis=1)
 
                     for i in range(prediction.shape[0]):
+                        if image_name[i] in written_names:
+                            continue
+                        else:
+                            written_names.add(image_name[i])
+
                         if predicted_class[i] == gt_class[i]:
                             num_correct += 1
 
@@ -196,8 +202,6 @@ def main(_):
                         ofile_prob.write('%s,%s\n' % (image_name[i], ','.join(['%f' % x for x in prediction[i, :]])))
 
                         processed += 1
-                        if processed == num_images:
-                            break
 
                         # Output status info
                         if (processed + 1) % 100 == 0:
