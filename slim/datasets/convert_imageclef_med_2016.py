@@ -1,28 +1,3 @@
-# Copyright 2016 The TensorFlow Authors. All Rights Reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-# ==============================================================================
-r"""Downloads and converts Flowers data to TFRecords of TF-Example protos.
-
-This module downloads the Flowers data, uncompresses it, reads the files
-that make up the Flowers data and creates two TFRecord datasets: one for train
-and one for test. Each TFRecord dataset is comprised of a set of TF-Example
-protocol buffers, each of which contain a single image and label.
-
-The script should take about a minute to run.
-
-"""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -46,14 +21,21 @@ tf.app.flags.DEFINE_boolean('imageclef_med_2016_auto_crop', False, 'Use auto-cro
 
 tf.app.flags.DEFINE_boolean('imageclef_med_2016_no_upscaling', False, 'Do not upscale images if their image size is smaller than the target size')
 
+tf.app.flags.DEFINE_boolean('imageclef_med_2016_selective_enrichment', False, 'Enrich only problematic classes with 2013 data')
+
 FLAGS = tf.app.flags.FLAGS
 
 _TRAIN_PATHS = [
-    '/home/koitka/ImageCLEF/2013/ImageCLEF2013TrainingSet',
-    '/home/koitka/ImageCLEF/2013/ImageCLEF2013TestSetGROUNDTRUTH',
-    '/home/koitka/ImageCLEF/2016/SubfigureClassificationTraining2016'
+    ('/home/koitka/ImageCLEF/2013/ImageCLEF2013TrainingSet', True),
+    ('/home/koitka/ImageCLEF/2013/ImageCLEF2013TestSetGROUNDTRUTH', True),
+    ('/home/koitka/ImageCLEF/2016/SubfigureClassificationTraining2016', False)
 ]
-_TEST_PATHS = ['/home/koitka/ImageCLEF/2016/SubfigureClassificationTest2016GT']
+
+_TEST_PATHS = [('/home/koitka/ImageCLEF/2016/SubfigureClassificationTest2016GT', False)]
+
+_ALLOWED_2013_CLASSES = [
+    'DRAN', 'DRCO', 'DRCT', 'DRPE', 'DRUS', 'DRXR', 'DSEC', 'DSEE', 'DSEM', 'DVDM', 'DVEN', 'GFLO', 'GMAT', 'GPLI'
+]
 
 # The number of images in the validation set.
 _NUM_VALIDATION = 4166
@@ -70,25 +52,6 @@ _IMAGE_SIZE = 360
 # Generates a debug directory with images in the dataset directory
 _GENERATE_DEBUG_IMAGES = False
 
-class ImageReader(object):
-    """Helper class that provides TensorFlow image coding utilities."""
-
-    def __init__(self):
-        # Initializes function that decodes RGB JPEG data.
-        self._decode_jpeg_data = tf.placeholder(dtype=tf.string)
-        self._decode_jpeg = tf.image.decode_jpeg(self._decode_jpeg_data, channels=3)
-
-    def read_image_dims(self, sess, image_data):
-        image = self.decode_jpeg(sess, image_data)
-        return image.shape[0], image.shape[1]
-
-    def decode_jpeg(self, sess, image_data):
-        image = sess.run(self._decode_jpeg,
-                         feed_dict={self._decode_jpeg_data: image_data})
-        assert len(image.shape) == 3
-        assert image.shape[2] == 3
-        return image
-
 
 def _get_filenames_and_classes(dirs):
     """Returns a list of filenames and inferred class names.
@@ -103,12 +66,14 @@ def _get_filenames_and_classes(dirs):
     """
     directories = []
     class_names = set()
-    for dir in dirs:
+    for dir, allow_filtering in dirs:
         for filename in os.listdir(dir):
             path = os.path.join(dir, filename)
             if os.path.isdir(path):
-                directories.append(path)
-                class_names.add(filename)
+                if not allow_filtering or \
+                   FLAGS.imageclef_med_2016_selective_enrichment and os.path.basename(path) in _ALLOWED_2013_CLASSES:
+                    directories.append(path)
+                    class_names.add(filename)
 
     photo_filenames = []
     for directory in directories:
@@ -146,8 +111,6 @@ def _convert_dataset(split_name, filenames, class_names_to_ids, dataset_dir, met
             os.makedirs(os.path.join(dataset_dir, 'debug'))
 
     with tf.Graph().as_default():
-        image_reader = ImageReader()
-
         with tf.Session('') as sess:
             csv_writer = None
 

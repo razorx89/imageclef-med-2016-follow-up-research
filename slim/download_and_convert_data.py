@@ -66,7 +66,7 @@ def main(_):
     download_and_convert_flowers.run(FLAGS.dataset_dir)
   elif FLAGS.dataset_name == 'mnist':
     download_and_convert_mnist.run(FLAGS.dataset_dir)
-  elif FLAGS.dataset_name == 'ImageCLEFmed2016':
+  elif FLAGS.dataset_name == 'ImageCLEFmed2016' or 'ImageCLEFmed2016partial':
     convert_imageclef_med_2016.run(FLAGS.dataset_dir)
   else:
     raise ValueError(

@@ -9,6 +9,7 @@ wget -qO- http://download.tensorflow.org/models/inception_v4_2016_09_09.tar.gz |
 mkdir -p datasets
 export CUDA_VISIBLE_DEVICES=""
 
+# ImageCLEFmed2016 fully enriched with 2013
 python slim/download_and_convert_data.py \
     --dataset_name=ImageCLEFmed2016 \
     --dataset_dir=datasets/ImageCLEFmed2016/
@@ -30,3 +31,11 @@ python slim/download_and_convert_data.py \
     --imageclef_med_2016_ara \
     --imageclef_med_2016_auto_crop \
     --imageclef_med_2016_no_upscaling
+
+# ImageCLEFmed2016 partially enriched with 2013
+python slim/download_and_convert_data.py \
+    --dataset_name=ImageCLEFmed2016partial \
+    --dataset_dir=datasets/ImageCLEFmed2016partial-ara-autocrop/ \
+    --imageclef_med_2016_selective_enrichment \
+    --imageclef_med_2016_ara \
+    --imageclef_med_2016_auto_crop

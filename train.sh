@@ -3,7 +3,7 @@
 # Variables to modify ---------------------------------------------------------
 MODEL_NAME=inception_resnet_v2
 MODEL_ARG_SCOPE=InceptionResnetV2
-PRETRAINED_MODEL_FILE=./pretrained/inception_resnet_v2_2016_08_30.ckpt
+PRETRAINED_MODEL_FILE=pretrained/inception_resnet_v2_2016_08_30.ckpt
 
 NUM_TRAIN_RUNS=5
 NUM_CLONES=2
