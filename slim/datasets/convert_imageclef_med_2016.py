@@ -215,13 +215,13 @@ def _auto_crop(image):
     all_cropped_border_colors = []
 
     while x1 < image.shape[0]:
-        if not np.all(image[x1, 0, :] == image[x1, :, :]):
+        if not np.all(image[0, 0, :] == image[x1, :, :]):
             break
         all_cropped_border_colors.extend([tuple(x) for x in image[x1, :, :]])
         x1 += 1
 
     while x2 > x1:
-        if not np.all(image[x2, 0, :] == image[x2, :, :]):
+        if not np.all(image[-1, 0, :] == image[x2, :, :]):
             break
         all_cropped_border_colors.extend([tuple(x) for x in image[x2, :, :]])
         x2 -= 1
@@ -230,13 +230,13 @@ def _auto_crop(image):
         x1, x2 = 0, 0
 
     while y1 < image.shape[1]:
-        if not np.all(image[0, y1, :] == image[:, y1, :]):
+        if not np.all(image[0, 0, :] == image[:, y1, :]):
             break
         all_cropped_border_colors.extend([tuple(x) for x in image[:, y1, :]])
         y1 += 1
 
     while y2 > y1:
-        if not np.all(image[0, y2, :] == image[:, y2, :]):
+        if not np.all(image[0, -1, :] == image[:, y2, :]):
             break
         all_cropped_border_colors.extend([tuple(x) for x in image[:, y2, :]])
         y2 -= 1
