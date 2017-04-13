@@ -70,8 +70,8 @@ def _get_filenames_and_classes(dirs):
         for filename in os.listdir(dir):
             path = os.path.join(dir, filename)
             if os.path.isdir(path):
-                if not allow_filtering or \
-                   FLAGS.imageclef_med_2016_selective_enrichment and os.path.basename(path) in _ALLOWED_2013_CLASSES:
+                if not FLAGS.imageclef_med_2016_selective_enrichment\
+                   or allow_filtering and os.path.basename(path) in _ALLOWED_2013_CLASSES:
                     directories.append(path)
                     class_names.add(filename)
 
