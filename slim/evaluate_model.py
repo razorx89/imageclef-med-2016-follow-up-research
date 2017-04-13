@@ -129,7 +129,8 @@ def main(_):
         ####################
         # Create a session #
         ####################
-        with tf.Session() as sess:
+        gpu_options = tf.GPUOptions(allow_growth=True)
+        with tf.Session(config=tf.ConfigProto(gpu_options=gpu_options)) as sess:
             ######################
             # Restore checkpoint #
             ######################
