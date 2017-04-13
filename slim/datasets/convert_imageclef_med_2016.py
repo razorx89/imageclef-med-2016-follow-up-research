@@ -110,6 +110,8 @@ def _convert_dataset(split_name, filenames, class_names_to_ids, dataset_dir, met
         if not os.path.exists(os.path.join(dataset_dir, 'debug')):
             os.makedirs(os.path.join(dataset_dir, 'debug'))
 
+    num_corrupted_images = 0
+    num_written = 0
     with tf.Graph().as_default():
         with tf.Session('') as sess:
             csv_writer = None
@@ -129,6 +131,11 @@ def _convert_dataset(split_name, filenames, class_names_to_ids, dataset_dir, met
                         # Read the filename:
                         # image_data = tf.gfile.FastGFile(filenames[i], 'r').read()
                         image = cv2.imread(filenames[i], cv2.IMREAD_COLOR)
+                        if _check_for_corrupted_pmc_image(image):
+                            num_corrupted_images += 1
+                            print('\n"%s" seems to be a corrupted image' % filenames[i])
+                            continue
+
                         image, meta_info = _preprocess_image(image,
                                                              squash=not FLAGS.imageclef_med_2016_ara,
                                                              no_upscaling=FLAGS.imageclef_med_2016_no_upscaling)
@@ -166,9 +173,13 @@ def _convert_dataset(split_name, filenames, class_names_to_ids, dataset_dir, met
                             'image/name': dataset_utils.bytes_feature(image_name),
                         }))
                         tfrecord_writer.write(example.SerializeToString())
+                        num_written += 1
 
     sys.stdout.write('\n')
     sys.stdout.flush()
+    print('Total number of images: %d' % len(filenames))
+    print('... images written:     %d' % num_written)
+    print('... images corrupted:   %d' % num_corrupted_images)
 
 
 def _preprocess_image(image, squash=True, no_upscaling=False):
@@ -207,6 +218,22 @@ def _preprocess_image(image, squash=True, no_upscaling=False):
         }
 
     return result, meta_info
+
+
+def _check_for_corrupted_pmc_image(image):
+    def _check_horizontal(image):
+        for i in range(image.shape[0]):
+            if not np.all(image[i, 0, :] == image[i, :, :]):
+                return False
+        return True
+
+    def _check_vertical(image):
+        for i in range(image.shape[1]):
+            if not np.all(image[0, i, :] == image[:, i, :]):
+                return False
+        return True
+
+    return _check_horizontal(image) or _check_vertical(image)
 
 
 def _auto_crop(image):
