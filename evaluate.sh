@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Variables to modify ---------------------------------------------------------
-MODEL_NAME=inception_v4
+MODEL_NAME=inception_resnet_v2
 
 # -----------------------------------------------------------------------------
 
