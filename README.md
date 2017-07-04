@@ -32,7 +32,7 @@ at the CLEF 2017 conference:
 > for Medical Subfigure Classification". In: Experimental IR Meets 
 > Multilinguality, Multimodality, and Interaction. Proceedings of the 8th 
 > International Conference of the CLEF Association, CLEF 2017, Dublin, Ireland, 
-> September 11-14, 2017. Lecture Notes of Computer Science (LNCS), vol. 10439, 
+> September 11-14, 2017. Lecture Notes of Computer Science (LNCS), vol. 10456, 
 > pp. ??-??, Springer Verlag (2017)
 
 __LaTeX BibTex:__
@@ -43,7 +43,7 @@ __LaTeX BibTex:__
   booktitle = {Experimental IR Meets Multilinguality, Multimodality, and Interaction. Proceedings of the 8th International Conference of the CLEF Association, CLEF 2017, Dublin, Ireland, September 11-14, 2017},
   year      = {2017},
   editor    = {Gareth J. F. Jones, Séamus Lawless, Julio Gonzalo, Liadh Kelly, Lorraine Goeuriot, Thomas Mandl, Linda Cappellato, Nicola Ferro},
-  volume    = {10439},
+  volume    = {10456},
   series    = {Lecture Notes of Computer Science (LNCS)},
   pages     = {??--??},
   publisher = {Springer Verlag},
