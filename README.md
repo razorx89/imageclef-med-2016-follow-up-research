@@ -33,9 +33,9 @@ at the CLEF 2017 conference:
 > Multilinguality, Multimodality, and Interaction. Proceedings of the 8th 
 > International Conference of the CLEF Association, CLEF 2017, Dublin, Ireland, 
 > September 11-14, 2017. Lecture Notes of Computer Science (LNCS), vol. 10456, 
-> pp. ??-??, Springer Verlag (2017)
+> pp. 57-68, Springer Verlag (2017)
 
-__LaTeX BibTex:__
+__LaTeX BibTeX:__
 ```
 @InProceedings{Koitka.Friedrich2017,
   author    = {Sven Koitka and Christoph M. Friedrich},
@@ -45,7 +45,7 @@ __LaTeX BibTex:__
   editor    = {Gareth J. F. Jones, Séamus Lawless, Julio Gonzalo, Liadh Kelly, Lorraine Goeuriot, Thomas Mandl, Linda Cappellato, Nicola Ferro},
   volume    = {10456},
   series    = {Lecture Notes of Computer Science (LNCS)},
-  pages     = {??--??},
+  pages     = {57--68},
   publisher = {Springer Verlag},
 }
 ```
