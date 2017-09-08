@@ -33,7 +33,7 @@ at the CLEF 2017 conference:
 > Multilinguality, Multimodality, and Interaction. Proceedings of the 8th 
 > International Conference of the CLEF Association, CLEF 2017, Dublin, Ireland, 
 > September 11-14, 2017. Lecture Notes of Computer Science (LNCS), vol. 10456, 
-> pp. 57-68, Springer Verlag (2017)
+> pp. 57-68, Springer Verlag (2017). https://doi.org/10.1007/978-3-319-65813-1_5
 
 __LaTeX BibTeX:__
 ```
@@ -47,6 +47,7 @@ __LaTeX BibTeX:__
   series    = {Lecture Notes of Computer Science (LNCS)},
   pages     = {57--68},
   publisher = {Springer Verlag},
+  doi       = {10.1007/978-3-319-65813-1_5}
 }
 ```
 
